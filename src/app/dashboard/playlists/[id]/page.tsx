@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
@@ -18,6 +18,17 @@ interface PlaylistSong {
 }
 
 export default function PlaylistDetailPage() {
+  return (
+    <Suspense fallback={<p className="mx-auto max-w-3xl px-6 py-10 text-zinc-500">Loading…</p>}>
+      <PlaylistDetailInner />
+    </Suspense>
+  );
+}
+
+// useParams() reads a value only known at request time, which blocks
+// Next.js 16's Cache Components prerendering unless isolated behind a
+// Suspense boundary (see the outer export above).
+function PlaylistDetailInner() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
