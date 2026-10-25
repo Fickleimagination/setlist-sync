@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, type QueryResultRow } from "pg";
 
 // Single shared connection pool. DATABASE_URL comes from env vars only —
 // never hard-code credentials here (DBMS Level 3 requirement #10).
@@ -19,7 +19,10 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 /** Run a single parameterized query. */
-export async function query<T = unknown>(text: string, params?: unknown[]) {
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[]
+) {
   const result = await pool.query<T>(text, params);
   return result;
 }

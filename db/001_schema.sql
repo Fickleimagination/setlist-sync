@@ -113,9 +113,18 @@ CREATE TABLE Song_Embeddings (
 );
 
 -- Approximate nearest-neighbor index for fast cosine-similarity search.
+-- `lists` controls how many k-means clusters the index partitions vectors
+-- into; pgvector's own guidance is roughly rows/1000 (minimum 1). With a
+-- catalog this small (the full One Direction discography is a few dozen
+-- songs), a larger `lists` value actually makes the ANN search WORSE —
+-- each cluster holds too few points for the approximation to behave
+-- sensibly, and ORDER BY ... LIMIT queries can silently return far fewer
+-- (or zero) of the true nearest neighbors. lists = 1 keeps the index
+-- exact at this scale while still demonstrating the ivfflat structure;
+-- raise it (rows/1000) as the catalog grows.
 CREATE INDEX idx_song_embeddings_cosine
     ON Song_Embeddings USING ivfflat (embedding vector_cosine_ops)
-    WITH (lists = 10);
+    WITH (lists = 1);
 
 -- =====================================================================
 -- SECTION 3: Indexes
