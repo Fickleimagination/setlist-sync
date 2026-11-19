@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { query } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 
@@ -63,4 +64,25 @@ export async function DELETE(_request: NextRequest, ctx: Ctx) {
 
   await query(`DELETE FROM Playlists WHERE playlist_id = $1`, [playlistId]);
   return Response.json({ ok: true });
+}
+
+const RenameSchema = z.object({ playlist_name: z.string().min(1).max(100) });
+
+// PUT /api/playlists/:id — rename. Owner or admin only.
+export async function PUT(request: NextRequest, ctx: Ctx) {
+  const { user, error } = await requireUser();
+  if (error) return error;
+  const { id } = await ctx.params;
+  const playlistId = Number(id);
+  if (!Number.isInteger(playlistId)) return Response.json({ error: "Invalid playlist id" }, { status: 400 });
+  const check = await assertOwnership(playlistId, user!.userId, user!.role);
+  if (check === "not_found") return Response.json({ error: "Playlist not found" }, { status: 404 });
+  if (check === "forbidden") return Response.json({ error: "Not your playlist" }, { status: 403 });
+  const parsed = RenameSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return Response.json({ error: parsed.error.flatten() }, { status: 400 });
+  const r = await query(
+    `UPDATE Playlists SET playlist_name=$1 WHERE playlist_id=$2 RETURNING playlist_id, playlist_name`,
+    [parsed.data.playlist_name, playlistId]
+  );
+  return Response.json({ playlist: r.rows[0] });
 }

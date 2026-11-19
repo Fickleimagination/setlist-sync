@@ -38,3 +38,35 @@ export async function POST(request: NextRequest) {
     throw err;
   }
 }
+
+// GET /api/ratings — the current user's own ratings.
+export async function GET() {
+  const { user, error } = await requireUser();
+  if (error) return error;
+  const r = await query(
+    `SELECT r.song_id, s.title, r.rating_value, r.rated_at
+     FROM Ratings r JOIN Songs s ON s.song_id = r.song_id
+     WHERE r.user_id = $1 ORDER BY r.rated_at DESC`,
+    [user!.userId]
+  );
+  return Response.json({ ratings: r.rows });
+}
+
+// DELETE /api/ratings?song_id=&user_id= — remove a rating. A user can delete
+// their own; an admin may also pass user_id to delete anyone's.
+export async function DELETE(request: NextRequest) {
+  const { user, error } = await requireUser();
+  if (error) return error;
+  const sp = new URL(request.url).searchParams;
+  const songId = Number(sp.get("song_id"));
+  const target = sp.get("user_id") ? Number(sp.get("user_id")) : user!.userId;
+  if (!Number.isInteger(songId) || !Number.isInteger(target)) {
+    return Response.json({ error: "song_id is required" }, { status: 400 });
+  }
+  if (target !== user!.userId && user!.role !== "admin") {
+    return Response.json({ error: "Not your rating" }, { status: 403 });
+  }
+  const r = await query(`DELETE FROM Ratings WHERE user_id=$1 AND song_id=$2 RETURNING song_id`, [target, songId]);
+  if (r.rows.length === 0) return Response.json({ error: "Rating not found" }, { status: 404 });
+  return Response.json({ ok: true });
+}

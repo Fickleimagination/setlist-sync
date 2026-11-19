@@ -50,6 +50,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 
 const SongPatchSchema = z.object({
   title: z.string().min(1).max(150).optional(),
+  album_id: z.number().int().optional(),
   track_number: z.number().int().positive().optional(),
   duration_seconds: z.number().int().positive().optional(),
   tempo_bpm: z.number().positive().optional(),
@@ -110,7 +111,10 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     });
     if (!song) return Response.json({ error: "Song not found" }, { status: 404 });
     return Response.json({ song });
-  } catch (err) {
+  } catch (err: unknown) {
+    if ((err as { code?: string }).code === "23503") {
+      return Response.json({ error: "album_id does not reference an existing album" }, { status: 400 });
+    }
     throw err;
   }
 }

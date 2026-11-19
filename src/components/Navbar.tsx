@@ -1,12 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 
 export default function Navbar() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, refresh, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Re-check the session on every page change so the navbar updates
+  // right after login/logout.
+  useEffect(() => {
+    refresh();
+  }, [pathname, refresh]);
 
   return (
     <header className="border-b border-zinc-800 bg-zinc-950 text-zinc-50">

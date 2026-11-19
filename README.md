@@ -131,13 +131,16 @@ npm run db:reset
 | `/api/auth/register`, `/login`, `/logout`, `/me` | POST/GET | public |
 | `/api/albums`, `/api/albums/:id` | GET / POST / PUT / DELETE | GET public, writes admin-only |
 | `/api/songs`, `/api/songs/:id` | GET / POST / PUT / DELETE | GET public, writes admin-only |
-| `/api/members`, `/api/members/:id` | GET | public |
-| `/api/playlists`, `/api/playlists/:id`, `/api/playlists/:id/songs[/...]` | GET/POST/DELETE | signed-in owner (or admin) |
-| `/api/ratings` | POST | signed-in user |
-| `/api/history` | GET/POST | signed-in user |
+| `/api/members`, `/api/members/:id` | GET / POST / PUT / DELETE | GET public, writes admin-only |
+| `/api/songs/:id/credits` | POST / DELETE | admin only (add/remove a member credit) |
+| `/api/playlists`, `/api/playlists/:id`, `/api/playlists/:id/songs[/...]` | GET / POST / PUT (rename) / DELETE | signed-in owner (or admin) |
+| `/api/ratings` | GET / POST / DELETE | signed-in user (own); admin can delete any |
+| `/api/history`, `/api/history/:id` | GET / POST / DELETE | signed-in user (own); admin can delete any |
 | `/api/recommendations/similar/:id` | GET | public |
 | `/api/recommendations/for-you` | GET | signed-in user |
+| `/api/users`, `/api/users/:id` | GET / PUT / DELETE | admin only (cannot delete or demote yourself) |
 | `/api/users/:id/role` | PUT | admin only |
+| `/api/admin/playlists`, `/api/admin/ratings`, `/api/admin/history` | GET | admin only (all users' data) |
 
 ## Testing performed
 
